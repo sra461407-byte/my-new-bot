@@ -5,9 +5,11 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 
 # Token-ኑን ከ Render Environment Variables ላይ ያነባል
 TOKEN = os.environ.get("TOKEN")
+# የቴሌግራም ቻናልህ ሊንክ
+CHANNEL_LINK = "https://t.me/TokSaveHub"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("ሰላም! የTikTok ሊንክ ላክልኝና ቪዲዮውን ላውርድልህ።")
+    await update.message.reply_text("Welcome! Send me a TikTok link and I will download the video for you.")
 
 async def download_tiktok(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = update.message.text.strip()
@@ -16,25 +18,27 @@ async def download_tiktok(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if "tiktok.com" not in url:
         return
 
-    msg = await update.message.reply_text("ቪዲዮው በመውረድ ላይ ነው... ⏳")
+    msg = await update.message.reply_text("Downloading your video... ⏳")
     
-    # TikWM API - በጣም ፈጣንና አስተማማኝ ነው
+    # TikWM API - ፈጣንና አስተማማኝ ነው
     api_url = f"https://www.tikwm.com/api/?url={url}"
     
     try:
         response = requests.get(api_url).json()
         
         if response.get("code") == 0:
-            # ቪዲዮው ያለ Watermark ይገኛል
             video_url = response["data"]["play"]
-            caption = response["data"].get("title", "የወረደ TikTok ቪዲዮ")
+            title = response["data"].get("title", "TikTok Video")
             
-            await update.message.reply_video(video: video_url, caption: caption)
-            await msg.delete() # 'በመውረድ ላይ ነው' የሚለውን ጽሁፍ ያጠፋዋል
+            # ከቪዲዮው ጋር የሚላክ ጽሁፍ (Caption)
+            caption_text = f"✅ Video: {title}\n\n🚀 Downloaded via: @TokSaveBot\n📢 Join our channel: {CHANNEL_LINK}"
+            
+            await update.message.reply_video(video=video_url, caption=caption_text)
+            await msg.delete()
         else:
-            await update.message.reply_text("ይቅርታ፣ ቪዲዮውን ማግኘት አልቻልኩም። ሊንኩን አረጋግጥ።")
+            await update.message.reply_text("Sorry, I couldn't find the video. Please check the link.")
     except Exception as e:
-        await update.message.reply_text(f"ስህተት አጋጥሟል፦ {str(e)}")
+        await update.message.reply_text(f"An error occurred: {str(e)}")
 
 if __name__ == '__main__':
     if not TOKEN:
@@ -47,7 +51,6 @@ if __name__ == '__main__':
 
         print("Bot is running...")
         
-        # Render ላይ 'No open ports' የሚለውን ስህተት ለማስቀረት
-        # 8080 ፖርት ላይ እንዲያዳምጥ ያደርገዋል
+        # Render ላይ 'No open ports' ስህተት ለማስቀረት
         port = int(os.environ.get("PORT", 8080))
         app.run_polling()
