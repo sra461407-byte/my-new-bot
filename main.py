@@ -94,3 +94,4 @@ if __name__ == '__main__':
         print("Bot is running...")
         port = int(os.environ.get("PORT", 8080))
         app.run_polling()
+        
